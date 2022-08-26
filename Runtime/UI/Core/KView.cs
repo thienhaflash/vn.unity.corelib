@@ -119,7 +119,8 @@ namespace vn.corelib
                 holder = KView.CreateRectTransform("[Container] " + info.viewId, layer.parent);
                 viewGO = UnityObject.Instantiate(info.prefab, holder, false);
                 viewGO.name = info.viewId;
-
+                viewGO.SetActive(true);
+                
                 var kvi = viewGO.GetComponent<IKViewInit>();
                 kvi?.Init(this);
             }
@@ -176,20 +177,21 @@ namespace vn.corelib
 
         private void Awake()
         {
-            if (!useAsDefault) return;
+            if (useAsDefault)
+            {
+                if (_defaultInst == null)
+                {
+                    _defaultInst = this;
+                    DontDestroyOnLoad(this);
+                }
+                else
+                {
+                    useAsDefault = false;
+                    Debug.LogWarning("Multiple KView instances enabled <useAsDefault>!");
+                }    
+            }
+            
             InitIndex();
-
-            if (_defaultInst == null)
-            {
-                _defaultInst = this;
-                DontDestroyOnLoad(this);
-            }
-            else
-            {
-                useAsDefault = false;
-                Debug.LogWarning("Multiple KView instances enabled <useAsDefault>!");
-            }
-
             if (!string.IsNullOrEmpty(initViewId))
             {
                 ShowView(initViewId);

@@ -1,32 +1,54 @@
-using System;
 using UnityEditor.Events;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
 
-public class KViewButton : MonoBehaviour
+namespace vn.corelib
 {
-    public string viewId;
-    public string layerId = "MAIN";
-    
-    private void Reset()
+    public class KViewButton : MonoBehaviour
     {
-        var btn = GetComponent<Button>();
-        if (btn == null) return;
+        public string viewId;
+        public string layerId = "MAIN";
+        public KView view;
 
-        var nEvents = btn.onClick.GetPersistentEventCount();
-        for (var i = 0; i < nEvents; i++)
+        private void Reset()
         {
-            var evtTarget = btn.onClick.GetPersistentTarget(i);
-            if (evtTarget == this) return; // Existed
+            var btn = GetComponent<Button>();
+            if (btn == null) return;
+
+            var nEvents = btn.onClick.GetPersistentEventCount();
+            for (var i = 0; i < nEvents; i++)
+            {
+                var evtTarget = btn.onClick.GetPersistentTarget(i);
+                if (evtTarget == this) return; // Existed
+            }
+
+            var action = new UnityAction(this.OnClick);
+            UnityEventTools.AddVoidPersistentListener(btn.onClick, action);
         }
-        
-        var action = new UnityAction(this.OnClick);
-        UnityEventTools.AddVoidPersistentListener(btn.onClick, action);
-    }
-    
-    void OnClick()
-    {
-        Debug.LogWarning("Clicked!");
+
+        void OnClick()
+        {
+            if (view != null)
+            {
+                view.ShowView(viewId, null, layerId);
+                return;
+            }
+
+            KView.Goto(viewId, null, layerId);
+        }
+
+        [Button]
+        void FindKView()
+        {
+            var kView = transform.GetComponentInParent<KView>();
+            if (kView == null) return;
+            if (kView.useAsDefault) return;
+            this.view = kView;
+
+#if UNITY_EDITOR
+            UnityEditor.EditorUtility.SetDirty(this);
+#endif
+        }
     }
 }
