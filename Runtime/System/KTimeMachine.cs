@@ -61,12 +61,12 @@ namespace vn.corelib
             
             _checkingIndex = 0;
             _currentTime = 0;
-            _dirty = false;
         }
         
         public void StopAndClear()
         {
             Stop();
+            _dirty = false;
             _listNotes.Clear();
         }
         
