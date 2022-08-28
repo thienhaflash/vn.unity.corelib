@@ -69,8 +69,37 @@ namespace vn.corelib
             _dirty = false;
             _listNotes.Clear();
         }
+
+        public void Add(float time, Action action)
+        {
+            Add(new TimeNodeAction(time, action));
+        }
         
-        public void AddTimeNode(TimeNode node)
+        public void Add<T1>(float time, Action<T1> action, T1 p1)
+        {
+            Add(new TimeNodeAction(time, ()=> action(p1)));
+        }
+        
+        public void Add<T1, T2>(float time, Action<T1, T2> action, T1 p1, T2 p2)
+        {
+            Add(new TimeNodeAction(time, ()=> action(p1, p2)));
+        }
+        
+        public void Add<T1, T2, T3>(float time, Action<T1, T2, T3> action, T1 p1, T2 p2, T3 p3)
+        {
+            Add(new TimeNodeAction(time, ()=> action(p1, p2, p3)));
+        }
+        
+        public void Add<T1, T2, T3, T4>(float time, Action<T1, T2, T3, T4> action, T1 p1, T2 p2, T3 p3, T4 p4)
+        {
+            Add(new TimeNodeAction(time, ()=> action(p1, p2, p3, p4)));
+        }
+        public void Add<T1, T2, T3, T4, T5>(float time, Action<T1, T2, T3, T4, T5> action, T1 p1, T2 p2, T3 p3, T4 p4, T5 p5)
+        {
+            Add(new TimeNodeAction(time, ()=> action(p1, p2, p3, p4, p5)));
+        }
+        
+        public void Add(TimeNode node)
         {
             if (_isPlaying && node.triggerTime <= _currentTime)
             {
