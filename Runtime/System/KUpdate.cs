@@ -43,9 +43,9 @@ namespace vn.corelib
 		[Serializable]
 		class UpdateQueue
 		{
-			private bool dirty;
+			private bool _dirty;
 			internal List<UpdateInfo> queue = new List<UpdateInfo>();
-			private Dictionary<Action, UpdateInfo> map = new Dictionary<Action, UpdateInfo>();
+			private Dictionary<Action, UpdateInfo> _map = new Dictionary<Action, UpdateInfo>();
 
 			public int Add(Action callback, int priority = 0, bool once = false, bool checkExist = false)
 			{
@@ -55,17 +55,17 @@ namespace vn.corelib
 					return -1;
 				}
 
-				if (checkExist && map.TryGetValue(callback, out var info))
+				if (checkExist && _map.TryGetValue(callback, out var info))
 				{
 					Debug.LogWarning("Trying to add the same callback!");
 					return info.id;
 				}
 
 				var item = new UpdateInfo(callback, priority, once);
-				if (checkExist) map.Add(callback, item);
+				if (checkExist) _map.Add(callback, item);
 				queue.Add(item);
 
-				dirty = true;
+				_dirty = true;
 				return item.id;
 			}
 
@@ -91,9 +91,9 @@ namespace vn.corelib
 					return false;
 				}
 
-				if (!map.TryGetValue(callback, out UpdateInfo info)) return false;
+				if (!_map.TryGetValue(callback, out UpdateInfo info)) return false;
 
-				map.Remove(callback);
+				_map.Remove(callback);
 				info.callback = null; // do not remove items here!
 				return true;
 			}
@@ -137,9 +137,9 @@ namespace vn.corelib
 
 			public void Dispatch()
 			{
-				if (dirty)
+				if (_dirty)
 				{
-					dirty = false;
+					_dirty = false;
 					queue.Sort(QueueSorter);
 				}
 
@@ -171,13 +171,13 @@ namespace vn.corelib
 		public static int OnUpdate(Action callback, int priority = 0, bool once = false)
 		{
 			if (_api == null) Debug.LogWarning("KUpdate instance not found!");
-			return _updateQueue.Add(callback, priority, once);
+			return _updateQueue.Add(callback, priority, once, true);
 		}
 
 		public static int OnLateUpdate(Action callback, int priority = 0, bool once = false)
 		{
 			if (_api == null) Debug.LogWarning("KUpdate instance not found!");
-			return _lateUpdateQueue.Add(callback, priority, once);
+			return _lateUpdateQueue.Add(callback, priority, once, true);
 		}
 
 		public static void RemoveLateUpdate(Action callback)
