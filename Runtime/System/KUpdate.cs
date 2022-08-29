@@ -10,8 +10,8 @@ namespace vn.corelib
 	{
 		private static int COUNTER = 1;
 		private static KUpdate _api;
-		private static readonly UpdateQueue _updateQueue = new UpdateQueue();
-		private static readonly UpdateQueue _lateUpdateQueue = new UpdateQueue();
+		private static readonly UpdateQueue updateQueue = new ();
+		private static readonly UpdateQueue lateUpdateQueue = new ();
 
 
 		[Serializable]
@@ -44,10 +44,10 @@ namespace vn.corelib
 		class UpdateQueue
 		{
 			private bool _dirty;
-			internal List<UpdateInfo> queue = new List<UpdateInfo>();
-			private Dictionary<Action, UpdateInfo> _map = new Dictionary<Action, UpdateInfo>();
-
-			public int Add(Action callback, int priority = 0, bool once = false, bool checkExist = false)
+			internal List<UpdateInfo> queue = new ();
+			private readonly Dictionary<Action, UpdateInfo> _map = new ();
+			
+			public int Add(Action callback, int priority = 0, bool once = false, bool checkExist = true)
 			{
 				if (callback == null)
 				{
@@ -55,7 +55,7 @@ namespace vn.corelib
 					return -1;
 				}
 
-				if (checkExist && _map.TryGetValue(callback, out var info))
+				if (checkExist && _map.TryGetValue(callback, out UpdateInfo info))
 				{
 					Debug.LogWarning("Trying to add the same callback!");
 					return info.id;
@@ -74,12 +74,13 @@ namespace vn.corelib
 				for (var i = 0; i < queue.Count; i++)
 				{
 					UpdateInfo item = queue[i];
-
 					if (item.id != updateId) continue;
-					item.callback = null; // removed
+					
+					_map.Remove(item.callback);
+					item.callback = null; // do not remove items here!
 					return true;
 				}
-
+				
 				return false;
 			}
 
@@ -151,9 +152,13 @@ namespace vn.corelib
 					if (alive) continue;
 
 					dieCount++;
+					
+					// Remove dead items
+					_map.Remove(item.callback); // no need to check for existence
+					item.callback = null;
 					queue[i] = null;
 				}
-
+				
 				if (dieCount == 0) return;
 				var itemIndex = -1;
 				for (var i = 0; i < queue.Count; i++) //shift items up in O(N) fashion
@@ -171,25 +176,25 @@ namespace vn.corelib
 		public static int OnUpdate(Action callback, int priority = 0, bool once = false)
 		{
 			if (_api == null) Debug.LogWarning("KUpdate instance not found!");
-			return _updateQueue.Add(callback, priority, once, true);
+			return updateQueue.Add(callback, priority, once, true);
 		}
 
 		public static int OnLateUpdate(Action callback, int priority = 0, bool once = false)
 		{
 			if (_api == null) Debug.LogWarning("KUpdate instance not found!");
-			return _lateUpdateQueue.Add(callback, priority, once, true);
+			return lateUpdateQueue.Add(callback, priority, once, true);
 		}
 
 		public static void RemoveLateUpdate(Action callback)
 		{
 			if (_api == null) return;
-			_lateUpdateQueue.Remove(callback);
+			lateUpdateQueue.Remove(callback);
 		}
 
 		public static void RemoveUpdate(Action callback)
 		{
 			if (_api == null) return;
-			_updateQueue.Remove(callback);
+			updateQueue.Remove(callback);
 		}
 
 		private void Awake()
@@ -218,12 +223,12 @@ namespace vn.corelib
 
 		private void Update()
 		{
-			_updateQueue.Dispatch();
+			updateQueue.Dispatch();
 		}
 
 		private void LateUpdate()
 		{
-			_lateUpdateQueue.Dispatch();
+			lateUpdateQueue.Dispatch();
 		}
 	}
 }
