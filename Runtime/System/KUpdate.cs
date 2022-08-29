@@ -148,6 +148,13 @@ namespace vn.corelib
 				for (var i = 0; i < queue.Count; i++)
 				{
 					UpdateInfo item = queue[i];
+					if (item == null)
+					{
+						Debug.LogWarning("Something wrong? item == null!");
+						dieCount++;
+						continue;
+					}
+					
 					var alive = ExecuteCallback(item);
 					if (alive) continue;
 
@@ -170,6 +177,8 @@ namespace vn.corelib
 					if (itemIndex == i) continue; // did not found any null since start
 					queue[itemIndex] = queue[i]; // there were some null found, and now we need to shift items left
 				}
+				
+				queue.RemoveRange(itemIndex+1, queue.Count-1-itemIndex);
 			}
 		}
 
