@@ -33,7 +33,7 @@ namespace vn.corelib
 
             var idx = t.GetSiblingIndex();
             var nidx = (idx + offset + nChildren) % nChildren;
-            var ngo = p.GetChild(nidx).gameObject;
+            GameObject ngo = p.GetChild(nidx).gameObject;
 
             go.SetActive(false);
             ngo.SetActive(true);
@@ -43,18 +43,22 @@ namespace vn.corelib
         [MenuItem("Tools/Hierarchy/Active Prev Sibling _,")]
         static void ActivePrev()
         {
+            if (EditorApplication.isPlaying) return;
             SetActiveOffset(-1);
         }
 
         [MenuItem("Tools/Hierarchy/Active Next Sibling _.")]
         static void ActiveNext()
         {
+            if (EditorApplication.isPlaying) return;
             SetActiveOffset(1);
         }
-
+        
         [MenuItem("Tools/Hierarchy/Toggle Active _a")]
         static void Active()
         {
+            if (EditorApplication.isPlaying) return;
+            
             var s = Selection.gameObjects;
             if (s.Length == 0 || string.IsNullOrEmpty(s[0].scene.name)) return;
             var a = s[0].activeSelf;
@@ -67,8 +71,9 @@ namespace vn.corelib
         [MenuItem("Tools/Hierarchy/Focus ^h")]
         static void FocusHierarchyPanel()
         { 
-            var windows = Resources.FindObjectsOfTypeAll<EditorWindow>();
-            foreach (var t in windows)
+            if (EditorApplication.isPlaying) return;
+            EditorWindow[] windows = Resources.FindObjectsOfTypeAll<EditorWindow>();
+            foreach (EditorWindow t in windows)
             {
                 if (!t.titleContent.text.Contains("Hierarchy")) continue;
                 EditorWindow.FocusWindowIfItsOpen(t.GetType());
