@@ -2,6 +2,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 namespace vn.corelib
@@ -15,7 +16,7 @@ namespace vn.corelib
 
 
 		[Serializable]
-		class UpdateInfo
+		public class UpdateInfo
 		{
 #if KUPDATE_DEBUG
             public string description;
@@ -47,7 +48,7 @@ namespace vn.corelib
 			internal List<UpdateInfo> queue = new ();
 			private readonly Dictionary<Action, UpdateInfo> _map = new ();
 			
-			public int Add(Action callback, int priority = 0, bool once = false, bool checkExist = true)
+			public int Add(Action callback, int priority = 0, bool once = false)
 			{
 				if (callback == null)
 				{
@@ -55,14 +56,14 @@ namespace vn.corelib
 					return -1;
 				}
 
-				if (checkExist && _map.TryGetValue(callback, out UpdateInfo info))
+				if (_map.TryGetValue(callback, out UpdateInfo info))
 				{
 					Debug.LogWarning("Trying to add the same callback!");
 					return info.id;
 				}
 
 				var item = new UpdateInfo(callback, priority, once);
-				if (checkExist) _map.Add(callback, item);
+				_map.Add(callback, item);
 				queue.Add(item);
 
 				_dirty = true;
@@ -136,12 +137,23 @@ namespace vn.corelib
 				return !info.once;
 			}
 
+			private bool _dispatching;
+			
 			public void Dispatch()
 			{
+				if (_dispatching)
+				{
+					Debug.LogWarning("Dispatching!");
+					return;
+				}
+				
+				if (queue.Count == 0) return;
+				_dispatching = true;
+				
 				if (_dirty)
 				{
 					_dirty = false;
-					queue.Sort(QueueSorter);
+					if (queue.Count > 1) queue.Sort(QueueSorter);
 				}
 
 				var dieCount = 0;
@@ -150,11 +162,18 @@ namespace vn.corelib
 					UpdateInfo item = queue[i];
 					if (item == null)
 					{
-						Debug.LogWarning("Something wrong? item == null!");
+						Debug.LogWarning($"Something wrong? item null!");
 						dieCount++;
 						continue;
 					}
 					
+					if (item.callback == null)
+					{
+						dieCount++;
+						queue[i] = null;
+						continue;
+					}
+
 					var alive = ExecuteCallback(item);
 					if (alive) continue;
 
@@ -165,8 +184,13 @@ namespace vn.corelib
 					item.callback = null;
 					queue[i] = null;
 				}
+
+				if (dieCount == 0)
+				{
+					_dispatching = false;
+					return;
+				}
 				
-				if (dieCount == 0) return;
 				var itemIndex = -1;
 				for (var i = 0; i < queue.Count; i++) //shift items up in O(N) fashion
 				{
@@ -179,19 +203,20 @@ namespace vn.corelib
 				}
 				
 				queue.RemoveRange(itemIndex+1, queue.Count-1-itemIndex);
+				_dispatching = false;
 			}
 		}
 
 		public static int OnUpdate(Action callback, int priority = 0, bool once = false)
 		{
 			if (_api == null) Debug.LogWarning("KUpdate instance not found!");
-			return updateQueue.Add(callback, priority, once, true);
+			return updateQueue.Add(callback, priority, once);
 		}
 
 		public static int OnLateUpdate(Action callback, int priority = 0, bool once = false)
 		{
 			if (_api == null) Debug.LogWarning("KUpdate instance not found!");
-			return lateUpdateQueue.Add(callback, priority, once, true);
+			return lateUpdateQueue.Add(callback, priority, once);
 		}
 
 		public static void RemoveLateUpdate(Action callback)
@@ -219,15 +244,15 @@ namespace vn.corelib
 			DontDestroyOnLoad(this);
 
 #if KUPDATE_DEBUG
-            updateQueue = _updateQueue.queue;
-            lateUpdateQueue = _lateUpdateQueue.queue;
+            _updateQueue = updateQueue.queue;
+            _lateUpdateQueue = lateUpdateQueue.queue;
 #endif
 		}
 
 #if KUPDATE_DEBUG
         // VIEW-ONLY
-        public List<UpdateInfo> updateQueue;
-        public List<UpdateInfo> lateUpdateQueue;
+        public List<UpdateInfo> _updateQueue;
+        public List<UpdateInfo> _lateUpdateQueue;
 #endif
 
 		private void Update()
