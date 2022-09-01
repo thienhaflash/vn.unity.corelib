@@ -2,33 +2,27 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 namespace vn.corelib
 {
-    public class KEvent : MonoBehaviour
+    public static class KEvent
     {
-        private static KEvent _api;
-        public static Dispatcher Global { get; } = new ();
-        
-        private static readonly Dictionary<object, Dispatcher> _dispMap = new();
+        private static readonly Dictionary<object, Dispatcher> _dispatcherMap = new();
         public static Dispatcher Get(object dsp, bool autoNew = true)
         {
-            if (_dispMap.TryGetValue(dsp, out Dispatcher result)) return result;
+            if (_dispatcherMap.TryGetValue(dsp, out Dispatcher result)) return result;
             if (!autoNew) return null;
             
             result = new Dispatcher();
-            _dispMap.Add(dsp, result);
-            
-            #if KEVENT_DEBUG
-            if (_api != null) _api._dispatchers?.Add(result);
-            #endif
-            
+            _dispatcherMap.Add(dsp, result);
             return result;
         }
         
-        #if KEVENT_DEBUG
+        // MIRROR APIs for Global Dispatcher here
+        public static Dispatcher Global { get; } = new Dispatcher();
+
+#if KEVENT_DEBUG
         [Serializable] public class DispatcherEventDesc
         {
             public string eventName;
@@ -223,29 +217,29 @@ namespace vn.corelib
             }
         }
         
-        public void Awake()
-        {
-            if (_api != null && _api != this)
-            {
-                Destroy(this);
-                Debug.LogWarning($"Multiple instance {nameof(KEvent)} found!");
-                return;
-            }
-            
-            _api = this;
-            
-            #if KEVENT_DEBUG
-            {
-                _dispatchers = _dispMap.Values.ToList();
-                _global = Global;
-            }
-            #endif
-        }
-        
-        #if KEVENT_DEBUG
-        public Dispatcher _global;
-        public List<Dispatcher> _dispatchers;
-        #endif
+        // public void Awake()
+        // {
+        //     if (_api != null && _api != this)
+        //     {
+        //         Destroy(this);
+        //         Debug.LogWarning($"Multiple instance {nameof(KEvent)} found!");
+        //         return;
+        //     }
+        //     
+        //     _api = this;
+        //     
+        //     #if KEVENT_DEBUG
+        //     {
+        //         _dispatchers = _dispMap.Values.ToList();
+        //         _global = Global;
+        //     }
+        //     #endif
+        // }
+        //
+        // #if KEVENT_DEBUG
+        // public Dispatcher _global;
+        // public List<Dispatcher> _dispatchers;
+        // #endif
     }
 }
 

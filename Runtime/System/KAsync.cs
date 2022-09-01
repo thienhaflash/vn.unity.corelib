@@ -111,7 +111,7 @@ public static class KAsync
 
     [NonSerialized] private static int _sleepFrame;
     [NonSerialized] private static readonly List<Info> _execQueue = new List<Info>();
-    [NonSerialized] private static readonly List<Info> _queue = new List<Info>();
+    [NonSerialized] internal static readonly List<Info> _queue = new List<Info>();
     [NonSerialized] private static readonly Dictionary<object, Info> _map = new Dictionary<object, Info>();
 
     private static T TryOverwrite<T>(object id, Action callback, int delayInFrame) where T: Info
