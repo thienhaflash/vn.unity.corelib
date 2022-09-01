@@ -18,7 +18,7 @@ namespace vn.corelib
 		public bool autoActive = true;
 		public bool autoParent = true;
 		public Transform parent;
-		[Range(0, 100)] public int prewarm = 0;
+		[Range(0, 100)] public int prewarm;
 	}
 	
 	[Serializable] public class KPoolPrefab
@@ -47,26 +47,26 @@ namespace vn.corelib
 	{
 		private const float PREWARM_TIME_SLICE = 1 / 90f; 
 		
-		private static readonly Dictionary<string, PrefabPool> poolMap = new ();
-		private static readonly Dictionary<GameObject, PrefabInst> useMap = new ();
-		private static readonly Queue<PrefabPool> prewarmQueue = new ();
+		private static readonly Dictionary<string, PrefabPool> _poolMap = new ();
+		private static readonly Dictionary<GameObject, PrefabInst> _useMap = new ();
+		private static readonly Queue<PrefabPool> _prewarmQueue = new ();
 
 		public static GameObject Get(string poolId, Transform parent = null)
 		{
-			return poolMap.TryGetValue(poolId, out PrefabPool prefab) ? prefab.Take(parent).go : null;
+			return _poolMap.TryGetValue(poolId, out PrefabPool prefab) ? prefab.Take(parent).go : null;
 		}
 		public static T Get<T>(string poolId, Transform parent = null) where T : Component
 		{
-			return poolMap.TryGetValue(poolId, out PrefabPool prefab) ? prefab.Take(parent).GetComponent<T>() : null;
+			return _poolMap.TryGetValue(poolId, out PrefabPool prefab) ? prefab.Take(parent).GetComponent<T>() : null;
 		}
 
 		public static bool Return(GameObject go)
 		{
 			if (go == null) return false;
-			if (!useMap.TryGetValue(go, out PrefabInst inst)) return false; // something wrong?
-			useMap.Remove(go);
+			if (!_useMap.TryGetValue(go, out PrefabInst inst)) return false; // something wrong?
+			_useMap.Remove(go);
 			
-			if (!poolMap.TryGetValue(inst.poolId, out PrefabPool prefabPool)) return false; // pool destroyed?
+			if (!_poolMap.TryGetValue(inst.poolId, out PrefabPool prefabPool)) return false; // pool destroyed?
 			prefabPool.Return(inst);
 			return true;
 		}
@@ -88,24 +88,24 @@ namespace vn.corelib
 		internal static void CreatePrefabPool(GameObject prefab, KPoolPolicy policy)
 		{
 			var poolId = prefab.name;
-			if (poolMap.ContainsKey(poolId))
+			if (_poolMap.ContainsKey(poolId))
 			{
 				Debug.LogWarning($"PoolId existed: {poolId}");
 				return;
 			}
 
 			var pool = new PrefabPool(poolId, policy, prefab);
-			poolMap.Add(poolId, pool);
+			_poolMap.Add(poolId, pool);
 			if (policy.prewarm == 0) return;
-			prewarmQueue.Enqueue(pool);
+			_prewarmQueue.Enqueue(pool);
 			KUpdate.OnUpdate(Prewarm);
 		}
 		internal static void DestroyPrefabPool(string poolId)
 		{
-			if (!poolMap.TryGetValue(poolId, out PrefabPool pool)) return;
+			if (!_poolMap.TryGetValue(poolId, out PrefabPool pool)) return;
 			
 			var listInUse = new List<PrefabInst>();
-			foreach (var kvp in useMap)
+			foreach (var kvp in _useMap)
 			{
 				if (kvp.Value.poolId != poolId) continue;
 				listInUse.Add(kvp.Value);
@@ -113,20 +113,20 @@ namespace vn.corelib
 
 			foreach (PrefabInst inst in listInUse)
 			{
-				useMap.Remove(inst.go);
+				_useMap.Remove(inst.go);
 				inst.Destroy();
 			}
 			
 			pool.Empty();
-			poolMap.Remove(poolId);
+			_poolMap.Remove(poolId);
 		}
 		
 		internal static void Prewarm()
 		{
 			var t1 = Time.realtimeSinceStartup;
-			while (prewarmQueue.Count > 0)
+			while (_prewarmQueue.Count > 0)
 			{
-				PrefabPool first = prewarmQueue.Peek();
+				PrefabPool first = _prewarmQueue.Peek();
 				while (first.instCount < first.policy.prewarm)
 				{
 					first.Instantiate(true);
@@ -134,7 +134,7 @@ namespace vn.corelib
 					if (t2 - t1 > PREWARM_TIME_SLICE) return;
 				}
 				
-				prewarmQueue.Dequeue();
+				_prewarmQueue.Dequeue();
 			}
 			
 			KUpdate.RemoveUpdate(Prewarm);
@@ -222,7 +222,7 @@ namespace vn.corelib
 				if (queue.Count == 0) Instantiate(false);
 
 				PrefabInst result = queue.Dequeue();
-				useMap.Add(result.go, result);
+				_useMap.Add(result.go, result);
 				
 				if (policy.autoParent) result.go.transform.SetParent(newParent, false);
 				if (policy.autoActive) result.go.SetActive(true);
