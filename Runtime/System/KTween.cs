@@ -1,6 +1,7 @@
 using UnityEngine;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace vn.corelib
 {
@@ -20,6 +21,74 @@ namespace vn.corelib
             Update, // updating progress
             Complete, // done
             Die // or killed
+        }
+
+        [Serializable] public class AimFloatTo
+        {
+            public float diff;
+            public float duration;
+
+            public float tweenDiff = 0;
+            public float tweenTime = 0;
+
+            internal bool isComplete;
+            public void UpdateFrame(EaseFunc ease, float dt)
+            {
+                tweenTime += dt;
+                
+                var p = duration == 0 ? 1 : Mathf.Clamp01(tweenTime / duration);
+                tweenDiff = ease(0, diff, p);
+                isComplete = tweenTime >= duration;
+            }
+        }
+        
+        public class AimFloat
+        {
+            public EaseFunc ease;
+            public float currentValue;
+            
+            public readonly float startValue = 0;
+            public readonly List<AimFloatTo> list = new List<AimFloatTo>();
+            public readonly Action<float> onChange;
+
+            public AimFloat(float startValue, Action<float> onChange)
+            {
+                this.startValue = startValue;
+                this.onChange = onChange;
+                currentValue = startValue;
+                ease = Ease.Linear;
+
+                KSystem.onUpdate += UpdateFrame;
+            }
+            
+            public void To(float value, float duration)
+            {
+                var lastPos = startValue + list.Sum(item => item.diff);
+                var newDiff = value - lastPos;
+                list.Add(new AimFloatTo()
+                {
+                    diff = newDiff,
+                    duration = duration
+                });
+                
+                Debug.LogWarning($"TO: {value} | Last: {lastPos}");
+            }
+
+            public void UpdateFrame()
+            {
+                var dt = Time.deltaTime;
+                var diff = 0f;
+                
+                for (var i = 0; i < list.Count; i++)
+                {
+                    AimFloatTo item = list[i];
+                    if (!item.isComplete) item.UpdateFrame(ease, dt);
+                    diff += item.tweenDiff;
+                }
+                
+                currentValue = startValue + diff;
+                onChange?.Invoke(currentValue);
+            }
         }
         
         [Serializable] public class Info
