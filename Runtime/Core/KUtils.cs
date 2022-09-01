@@ -9,45 +9,6 @@ namespace vn.corelib
 {
     public static class KUtils
     {
-	    public static Dictionary<TKey, TValue> BuildMap<TKey, TValue, TList>(Dictionary<TKey, TValue> map, List<TList> list, Func<TList, int, (TKey, TValue)> func)
-	    {
-		    map ??= new Dictionary<TKey, TValue>();
-		    map.Clear();
-		    if (list == null || list.Count == 0) return map;
-		    
-		    for (var i = 0; i < list.Count; i++)
-		    {
-			    TList item = list[i];
-			    if (item == null) continue;
-
-			    (TKey key, TValue value) = func(item, i);
-			    if (key == null)
-			    {
-				    Debug.LogWarning($"Key should not be null!");
-				    continue;
-			    }
-
-			    if (map.ContainsKey(key))
-			    {
-				    Debug.LogWarning($"Duplicated key found <{key}!");
-				    continue;
-			    }
-			    map.Add(key, value);
-		    }
-
-		    return map;
-	    }
-	    
-	    public static Dictionary<TKey, TValue> BuildMap<TKey, TValue, TList>(this List<TList> list, Func<TList, (TKey, TValue)> func, Dictionary<TKey, TValue> result = null)
-	    {
-		    return BuildMap(result, list, (item, _) => func(item));
-	    }
-	    
-	    public static Dictionary<TKey, TValue> BuildMap<TKey, TValue>(this List<TValue> list, Func<TValue, TKey> func, Dictionary<TKey, TValue> result = null)
-	    {
-		    return BuildMap(result, list, (item, _)=> (func(item), item));
-	    }
-	    
 		public static List<Transform> GetParents(Transform child, bool includeMe = false, Transform root = null)
 		{
 			var result = new List<Transform>();
@@ -66,9 +27,7 @@ namespace vn.corelib
 			result.Reverse();
 			return result;
 		}
-
 		
-
 		// public static string GetChildPath(Transform t)
 		// {
 			
