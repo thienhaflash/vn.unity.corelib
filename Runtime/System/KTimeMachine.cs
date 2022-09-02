@@ -28,7 +28,14 @@ namespace vn.corelib
             
             public override void Trigger()
             {
-                action?.Invoke();
+                try
+                {
+                    action?.Invoke();
+                }
+                catch (Exception e)
+                {
+                    Debug.LogWarning(e);
+                }
             }
         }
         

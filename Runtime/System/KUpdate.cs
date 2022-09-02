@@ -124,25 +124,15 @@ namespace vn.corelib
             bool ExecuteCallback(UpdateInfo info) // Return true if the callback is alive (will call next time)
             {
                 if (info?.callback == null) return false;
-
-#if UNITY_EDITOR
+                try
                 {
                     info.callback();
                 }
-#else
+                catch (Exception e)
                 {
-                    try
-                    {
-                        info.callback();
-                    }
-                    catch (Exception e)
-                    {
-                        Debug.LogWarning(e);
-                        return false;
-                    }
+                    Debug.LogWarning(e);
+                    return false;
                 }
-#endif
-
                 return !info.once;
             }
 
