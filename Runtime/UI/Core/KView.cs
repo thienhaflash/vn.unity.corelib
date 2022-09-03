@@ -9,13 +9,12 @@ using UnityEditor;
 #endif
 
 namespace vn.corelib
-{
-    
+{   
     public interface IKViewInit
     {
         void Init(KViewContext context);
     }
-
+    
     public interface IKViewDataChange
     {
         void OnViewDataChange(KViewContext context);
@@ -58,8 +57,6 @@ namespace vn.corelib
 
         [NonSerialized] public int index;
         
-        
-
         public bool HideAt(int stackIndex)
         {
             if (stackIndex < 0 || stackIndex > stack.Count - 1) return false;
@@ -132,6 +129,7 @@ namespace vn.corelib
 
             if (layer.allowStack) BringToTop();
             // Handle OnBeforeShow / OnAfterShow
+            KEvent.Get(kView).Dispatch(KView.EVENT_SHOW, layer.id, info.viewId);
         }
 
         internal void BringToTop()
@@ -165,6 +163,15 @@ namespace vn.corelib
 
     public partial class KView : MonoBehaviour
     {
+        public const string EVENT_SHOW = "KView.Show"; 
+        private static readonly Dictionary<string, KView> _kViewMap = new Dictionary<string, KView>();
+
+        public static KView GetKViewById(string kViewId)
+        {
+            return _kViewMap.TryGetValue(kViewId, out var result) ? result : null;
+        }
+        
+        public string kViewId;
         public bool useAsDefault;
         public string initViewId;
            
@@ -174,7 +181,7 @@ namespace vn.corelib
 
         [NonSerialized] private readonly Dictionary<string, string[]> _aliasCache = new();
         [NonSerialized] internal readonly List<KViewContext> listContexts = new(); // storing created views
-
+        
         private void Awake()
         {
             if (useAsDefault)
@@ -197,6 +204,26 @@ namespace vn.corelib
                 ShowView(initViewId);
             }
         }
+
+        private void Start()
+        {
+            if (string.IsNullOrEmpty(kViewId)) return;
+            if (!_kViewMap.TryAdd(kViewId, this))
+            {
+                Debug.LogWarning($"Duplicated kViewId: {kViewId}");
+            }
+            else
+            {
+                Debug.LogWarning($"Added: {kViewId}");   
+            }
+        }
+        
+        private void OnDestroy()
+        {
+            if (string.IsNullOrEmpty(kViewId)) return;
+            _kViewMap.Remove(kViewId);
+        }
+        
         private void InitIndex()
         {
             for (var i = 0; i < viewLayers.Count; i++)
@@ -353,11 +380,7 @@ namespace vn.corelib
             _defaultInst.FreeUpRam();
         }
     }
-
-
-
-
-
+    
     public partial class KView // CONST + UTILS
     {
         public const string MAIN_LAYER = "MAIN";
