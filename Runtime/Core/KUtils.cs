@@ -107,10 +107,18 @@ namespace vn.corelib
             for (var i = 0; i < buttonActionList.Length; i += 2)
             {
                 var btn = buttonActionList[i] as Button;
-                if (btn == null) continue;
+                if (btn == null)
+                {
+	                Debug.LogWarning($"Btn is null: {btn}");
+	                continue;
+                }
 
                 var action = buttonActionList[i + 1] as UnityAction;
-                if (action == null) continue;
+                if (action == null)
+                {
+	                Debug.LogWarning($"Action is null: {action}");
+	                continue;
+                }
 
                 btn.onClick.RemoveListener(action);
                 btn.onClick.AddListener(action);
