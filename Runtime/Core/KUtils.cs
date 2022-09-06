@@ -100,9 +100,14 @@ namespace vn.corelib
 				}
 			}
 		}
-        
-        
-        public static void SetupButtons(params object[] buttonActionList)
+
+		public static void SetupButton(Button btn, UnityAction action)
+		{
+			btn.onClick.RemoveListener(action);
+			btn.onClick.AddListener(action);
+		}
+		
+		public static void SetupButtons(params object[] buttonActionList)
         {
             for (var i = 0; i < buttonActionList.Length; i += 2)
             {
