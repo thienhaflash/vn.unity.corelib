@@ -129,7 +129,7 @@ namespace vn.corelib
 
             if (layer.allowStack) BringToTop();
             // Handle OnBeforeShow / OnAfterShow
-            KEvent.Get(kView).Dispatch(KView.EVENT_SHOW, layer.id, info.viewId);
+            kView.Dispatch(KView.EVENT_SHOW, layer.id, info.viewId);
         }
 
         internal void BringToTop()
@@ -161,7 +161,7 @@ namespace vn.corelib
         }
     }
 
-    public partial class KView : MonoBehaviour
+    public partial class KView : MonoBehaviour, IKEventSource
     {
         public const string EVENT_SHOW = "KView.Show"; 
         private static readonly Dictionary<string, KView> _kViewMap = new Dictionary<string, KView>();
