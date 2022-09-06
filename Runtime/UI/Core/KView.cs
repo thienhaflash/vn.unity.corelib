@@ -99,12 +99,12 @@ namespace vn.corelib
         
         public void Hide()
         {
-            // Debug.LogWarning($"Hide: {info.viewId}");
-            // Handle OnBeforeHide / OnAfterHide
+            viewTrans?.OnBeforeHide();
             isVisible = false;
             viewData = null; // remove old data (free memory)
             layer.stack.Remove(this);
             viewGO.SetActive(false);
+            viewTrans?.OnAfterHide();
         }
         
         public void Show()
@@ -120,16 +120,19 @@ namespace vn.corelib
                 
                 var kvi = viewGO.GetComponent<IKViewInit>();
                 kvi?.Init(this);
+                
+                viewTrans = viewGO.GetComponent<IKViewTransition>();
             }
-
-            // Debug.LogWarning($"Show: {info.viewId}");
+            
+            viewTrans?.OnBeforeShow();
+            
             isVisible = true;
             viewGO.SetActive(true);
             layer.stack.Add(this);
 
             if (layer.allowStack) BringToTop();
-            // Handle OnBeforeShow / OnAfterShow
             kView.Dispatch(KView.EVENT_SHOW, layer.id, info.viewId);
+            viewTrans?.OnAfterShow();
         }
 
         internal void BringToTop()
