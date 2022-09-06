@@ -1,7 +1,11 @@
-using UnityEditor.Events;
+
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.UI;
+
+#if UNITY_EDITOR
+using UnityEditor.Events;
+#endif
 
 namespace vn.corelib
 {
@@ -10,7 +14,8 @@ namespace vn.corelib
         public string viewId;
         public string layerId = "MAIN";
         public KView view;
-
+        
+        #if UNITY_EDITOR
         private void Reset()
         {
             var btn = GetComponent<Button>();
@@ -26,6 +31,7 @@ namespace vn.corelib
             var action = new UnityAction(this.OnClick);
             UnityEventTools.AddVoidPersistentListener(btn.onClick, action);
         }
+        #endif
 
         void OnClick()
         {
@@ -38,13 +44,12 @@ namespace vn.corelib
             KView.Goto(viewId, null, layerId);
         }
 
-        [Button]
-        void FindKView()
+        [Button] void FindKView()
         {
             var kView = transform.GetComponentInParent<KView>();
             if (kView == null) return;
             if (kView.useAsDefault) return;
-            this.view = kView;
+            view = kView;
 
 #if UNITY_EDITOR
             UnityEditor.EditorUtility.SetDirty(this);

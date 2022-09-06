@@ -1,10 +1,11 @@
 ﻿using System;
-#if UNITY_EDITOR
 using System.Linq;
 using System.Reflection;
-using UnityEditor;
 using UnityEngine;
 using Object = UnityEngine.Object;
+
+#if UNITY_EDITOR
+using UnityEditor;
 #endif
 
 namespace vn.corelib
@@ -119,5 +120,5 @@ namespace vn.corelib
             GUILayout.EndHorizontal();
         }
     }
-}
 #endif
+}
