@@ -265,6 +265,7 @@ namespace vn.corelib
 
                 if (!c.isVisible)
                 {
+                    c.viewData = viewData;
                     c.Show();
                     return;
                 }
