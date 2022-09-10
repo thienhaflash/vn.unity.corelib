@@ -96,15 +96,37 @@ namespace vn.corelib
             viewData = newViewData;
             // CALL --> OnViewDataChanged
         }
+
+        internal void TriggerCallback(Action action)
+        {
+            if (action == null) return;
+            
+            KView.PushContext(this);
+            
+            try
+            {
+                action();
+            }
+            catch (Exception e)
+            {
+                Debug.LogWarning(e);
+            }
+            finally
+            {
+                KView.PopContext(this);
+            }
+        }
         
         public void Hide()
         {
-            viewTrans?.OnBeforeHide();
+            if (viewTrans != null) TriggerCallback(viewTrans.OnBeforeHide);
+            
             isVisible = false;
             viewData = null; // remove old data (free memory)
             layer.stack.Remove(this);
             viewGO.SetActive(false);
-            viewTrans?.OnAfterHide();
+            
+            if (viewTrans != null) TriggerCallback(viewTrans.OnAfterHide);
         }
         
         public void Show()
@@ -124,15 +146,16 @@ namespace vn.corelib
                 viewTrans = viewGO.GetComponent<IKViewTransition>();
             }
             
-            viewTrans?.OnBeforeShow();
+            if (viewTrans != null) TriggerCallback(viewTrans.OnBeforeShow);
             
             isVisible = true;
             viewGO.SetActive(true);
             layer.stack.Add(this);
-
+            
             if (layer.allowStack) BringToTop();
+            // Debug.LogWarning($"Show::: {layer.id} {info.viewId}");
             kView.Dispatch(KView.EVENT_SHOW, layer.id, info.viewId);
-            viewTrans?.OnAfterShow();
+            if (viewTrans != null) TriggerCallback(viewTrans.OnAfterShow);
         }
 
         internal void BringToTop()
@@ -162,11 +185,40 @@ namespace vn.corelib
             holder = null;
             viewGO = null;
         }
+
+        public override string ToString()
+        {
+            return $"KViewContext [layerId:{layer.id} viewId:{info.viewId} KViewId: {kView.kViewId}]";
+        }
     }
 
     public partial class KView : MonoBehaviour, IKEventSource
     {
-        public const string EVENT_SHOW = "KView.Show"; 
+        public const string EVENT_SHOW = "KView.Show";
+        private static readonly List<KViewContext> _contextStack = new List<KViewContext>();
+        public static KViewContext currentContext => _contextStack.Count > 0 ? _contextStack[^1] : null;
+
+        internal static void PushContext(KViewContext ctx)
+        {
+            if (ctx == currentContext)
+            {
+                Debug.LogWarning("Something wrong? Same context pushed twice?");
+                return;
+            }
+            
+            _contextStack.Add(ctx);
+        }
+
+        internal static void PopContext(KViewContext ctx)
+        {
+            if (ctx == null || ctx != currentContext)
+            {
+                Debug.LogWarning("Something wrong! Popping context out of order!");
+                return;
+            }
+            _contextStack.RemoveAt(_contextStack.Count-1);
+        }
+        
         private static readonly Dictionary<string, KView> _kViewMap = new Dictionary<string, KView>();
 
         public static KView GetKViewById(string kViewId)
