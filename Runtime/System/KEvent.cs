@@ -75,8 +75,7 @@ namespace vn.corelib
     }
 
     public interface IKEventSource {}
-    
-    public static class KEvent
+    public static partial class KEvent
     {
         private static readonly Dictionary<object, Dispatcher> _dispatcherMap = new();
 
@@ -89,10 +88,7 @@ namespace vn.corelib
             _dispatcherMap.Add(dsp, result);
             return result;
         }
-
-        // MIRROR APIs for Global Dispatcher here
-        public static Dispatcher Global { get; } = new Dispatcher();
-
+        
 #if KEVENT_DEBUG
         [Serializable]
         public class DispatcherEventDesc
@@ -217,6 +213,73 @@ namespace vn.corelib
 #endif
                 _dispatching = false;
             }
+        }
+    }
+    
+    // GLOBAL EVENT DISPATCHER
+    public static partial class KEvent
+    {
+        private static readonly Dispatcher _global = new Dispatcher();
+        
+        public static void AddListener(string eventName, Action handler)
+        {
+            _global.Add(eventName, 0, handler);
+        }
+        public static void AddListener<T>(string eventName, Action<T> handler)
+        {
+            _global.Add(eventName, 1, handler);
+        }
+        public static void AddListener<T1, T2>(string eventName, Action<T1, T2> handler)
+        {
+            _global.Add(eventName, 2, handler);
+        }
+        public static void AddListener<T1, T2, T3>(string eventName,
+            Action<T1, T2, T3> handler)
+        {
+            _global.Add(eventName, 3, handler);
+        }
+
+        public static void RemoveListener(string eventName, Action handler)
+        {
+            _global.Remove(eventName, 0, handler);
+        }
+        public static void RemoveListener<T>(string eventName, Action<T> handler)
+        {
+            _global.Remove(eventName, 1, handler);
+        }
+        public static void RemoveListener<T1, T2>(string eventName, Action<T1, T2> handler)
+        {
+            _global.Remove(eventName, 2, handler);
+        }
+        public static void RemoveListener<T1, T2, T3>(string eventName,
+            Action<T1, T2, T3> handler)
+        {
+            _global.Remove(eventName, 3, handler);
+        }
+
+        public static void Dispatch(string eventName)
+        {
+            Delegate d = _global.Get(eventName, false)?[0];
+            if (d == null) return;
+            _global.EditorTryDispatch(() => d.DynamicInvoke());
+        }
+        public static void Dispatch<T>(string eventName, T p1)
+        {
+            Delegate d = _global.Get(eventName, false)?[1];
+            if (d == null) return;
+            _global.EditorTryDispatch(() => d.DynamicInvoke(p1));
+        }
+        public static void Dispatch<T1, T2>(string eventName, T1 p1, T2 p2)
+        {
+            Delegate d = _global.Get(eventName, false)?[2];
+            if (d == null) return;
+            _global.EditorTryDispatch(() => d.DynamicInvoke(p1, p2));
+        }
+        public static void Dispatch<T1, T2, T3>(string eventName, T1 p1, T2 p2, T3 p3)
+        {
+            Delegate d = _global.Get(eventName, false)?[3];
+            if (d == null) return;
+            _global.EditorTryDispatch(() => d.DynamicInvoke(p1, p2, p3));
         }
     }
 }
