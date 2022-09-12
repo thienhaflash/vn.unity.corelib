@@ -67,6 +67,8 @@ namespace vn.corelib
 			
 			public override void Refresh(float p)
 			{
+				if (target == null) return;
+				
 				var parent = (RectTransform)target.parent;
 				if (parent == null) return; // in prefab?
 				
