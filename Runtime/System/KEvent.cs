@@ -22,11 +22,14 @@ namespace vn.corelib
         }
         
         public static void AddListener(string eventName, Action handler) { _global.AddListener(eventName, handler); }
+        public static void AddListeners(params (string eventName, Action handler)[] pairs) { _global.AddListeners(pairs); }
         public static void AddListener<T>(string eventName, Action<T> handler) { _global.AddListener(eventName, handler); }
         public static void AddListener<T1, T2>(string eventName, Action<T1, T2> handler) { _global.AddListener(eventName, handler); }
         public static void AddListener<T1, T2, T3>(string eventName, Action<T1, T2, T3> handler) { _global.AddListener(eventName, handler); }
 
         public static void RemoveListener(string eventName, Action handler) { _global.RemoveListener(eventName, handler); }
+        public static void RemoveListeners(params (string eventName, Action handler)[] pairs) { _global.RemoveListeners(pairs); }
+        
         public static void RemoveListener<T>(string eventName, Action<T> handler) { _global.RemoveListener(eventName, handler); }
         public static void RemoveListener<T1, T2>(string eventName, Action<T1, T2> handler) { _global.RemoveListener(eventName, handler); }
         public static void RemoveListener<T1, T2, T3>(string eventName, Action<T1, T2, T3> handler) { _global.RemoveListener(eventName, handler); }
@@ -39,11 +42,28 @@ namespace vn.corelib
         public partial class Dispatcher
         {
             public void AddListener(string eventName, Action handler) { Add(eventName, 0, handler);}
+            public void AddListeners(params (string eventName, Action handler)[] pairs)
+            {
+                foreach ((string eventName, Action handler) item in pairs)
+                {
+                    (var eventName, Action handler) = item;
+                    Add(eventName, 0, handler);
+                }
+            }
             public void AddListener<T>(string eventName, Action<T> handler) { Add(eventName, 1, handler);}
             public void AddListener<T1, T2>(string eventName, Action<T1, T2> handler) { Add(eventName, 2, handler);}
             public void AddListener<T1, T2, T3>(string eventName, Action<T1, T2, T3> handler) { Add(eventName, 3, handler);}
 
             public void RemoveListener(string eventName, Action handler) { Remove(eventName, 0, handler);}
+            public void RemoveListeners(params (string eventName, Action handler)[] pairs)
+            {
+                foreach ((string eventName, Action handler) item in pairs)
+                {
+                    (var eventName, Action handler) = item;
+                    Remove(eventName, 0, handler);
+                }
+            }
+            
             public void RemoveListener<T>(string eventName, Action<T> handler) { Remove(eventName, 1, handler);}
             public void RemoveListener<T1, T2>(string eventName, Action<T1, T2> handler) { Remove(eventName, 2, handler);}
             public void RemoveListener<T1, T2, T3>(string eventName, Action<T1, T2, T3> handler) { Remove(eventName, 3, handler);}
@@ -182,12 +202,15 @@ namespace vn.corelib
     public static class KEventExtension
     {
         public static void AddListener(this IKEventSource source, string eventName, Action handler) { KEvent.Get(source)?.AddListener(eventName, handler); }
+        public static void AddListeners(this IKEventSource source, params (string eventName, Action handler)[] pairs) { KEvent.Get(source)?.AddListeners(pairs); }
+        
         public static void AddListener<T>(this IKEventSource source, string eventName, Action<T> handler) { KEvent.Get(source)?.AddListener(eventName, handler); }
         public static void AddListener<T1, T2>(this IKEventSource source, string eventName, Action<T1, T2> handler) { KEvent.Get(source)?.AddListener(eventName, handler); }
         public static void AddListener<T1, T2, T3>(this IKEventSource source, string eventName, Action<T1, T2, T3> handler) { KEvent.Get(source)?.AddListener(eventName, handler); }
         
-        
         public static void RemoveListener(this IKEventSource source, string eventName, Action handler) { KEvent.Get(source)?.RemoveListener(eventName, handler); }
+        public static void RemoveListeners(this IKEventSource source, params (string eventName, Action handler)[] pairs) { KEvent.Get(source)?.RemoveListeners(pairs); }
+        
         public static void RemoveListener<T>(this IKEventSource source, string eventName, Action<T> handler) { KEvent.Get(source)?.RemoveListener(eventName, handler); }
         public static void RemoveListener<T1, T2>(this IKEventSource source, string eventName, Action<T1, T2> handler) { KEvent.Get(source)?.RemoveListener(eventName, handler); }
         public static void RemoveListener<T1, T2, T3>(this IKEventSource source, string eventName, Action<T1, T2, T3> handler) { KEvent.Get(source)?.RemoveListener(eventName, handler); }
