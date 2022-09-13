@@ -23,7 +23,7 @@ public class UIStar : MonoBehaviour
     }
     
 #if UNITY_EDITOR
-    [Range(0, 10)] public int stars;
+    [Range(0, 10)] [SerializeField] private int stars;
     private int _lastStars;
     private void OnValidate()
     {

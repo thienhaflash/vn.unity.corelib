@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Serialization;
 using UnityEngine.UI;
 
 namespace vn.corelib
@@ -45,18 +47,30 @@ namespace vn.corelib
 				target.color = c;
 			}
 		}
+		
 		[Serializable] class TextBinding : BaseBinding
 		{
-			public Text target;
-			
+			public Component target;
 			public string format = "{0:#,###.##}";
 			public float min = 0;
 			public float max = 100;
-
+			
+			[NonSerialized] private PropertyInfo _property;
+			[NonSerialized] private bool _tried = false;
+			
 			public override void Refresh(float p)
 			{
+				if (target == null) return;
 				var p2 = (p * (max - min) + min);
-				target.text = string.Format(format, p2);
+				if (_property == null)
+				{
+					if (_tried) return;
+					_tried = true;
+					_property = target.GetType().GetProperty("text");
+				}
+				
+				var text = string.Format(format, p2);
+				_property?.SetValue(target, text);
 			}
 		}
 		[Serializable] class AnchoredPositionBinding : BaseBinding
@@ -117,7 +131,9 @@ namespace vn.corelib
 		
 		[SerializeField] ProgressBinding mode;
 		
-		[SerializeField] ImageFillBinding image;
+		[FormerlySerializedAs("image")] 
+		[SerializeField] ImageFillBinding imageFill;
+		
 		[SerializeField] AlphaBinding alpha;
 		[SerializeField] TextBinding text;
 		[SerializeField] AnchoredPositionBinding anchoredPos;
@@ -150,10 +166,10 @@ namespace vn.corelib
 		
 		#endif
 
-		void Preprocess()
+		[Button] void Preprocess()
 		{
 			list.Clear();
-			if ((mode & ProgressBinding.ImageFill) != 0) list.Add(image);
+			if ((mode & ProgressBinding.ImageFill) != 0) list.Add(imageFill);
 			if ((mode & ProgressBinding.Alpha) != 0) list.Add(alpha);
 			if ((mode & ProgressBinding.Text) != 0) list.Add(text);
 			if ((mode & ProgressBinding.AnchoredPosition) != 0) list.Add(anchoredPos);
