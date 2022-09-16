@@ -134,6 +134,12 @@ namespace vn.corelib
                     // Debug.LogWarning($"Event {eventName} - No listener with {nParams} parameters found!");
                     return;
                 }
+
+                if (_dispatching)
+                {
+                    KAsync.DelayCall(() => EditorTryDispatch(() => cb(d)));
+                    return;
+                }
                 
                 EditorTryDispatch(() => cb(d));
             }
