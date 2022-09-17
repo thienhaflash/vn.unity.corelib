@@ -107,28 +107,39 @@ namespace vn.corelib
 			btn.onClick.AddListener(action);
 		}
 		
-		public static void SetupButtons(params object[] buttonActionList)
-        {
-            for (var i = 0; i < buttonActionList.Length; i += 2)
-            {
-                var btn = buttonActionList[i] as Button;
-                if (btn == null)
-                {
-	                Debug.LogWarning($"Btn is null: {btn}");
-	                continue;
-                }
-
-                var action = buttonActionList[i + 1] as UnityAction;
-                if (action == null)
-                {
-	                Debug.LogWarning($"Action is null: {action}");
-	                continue;
-                }
-
-                btn.onClick.RemoveListener(action);
-                btn.onClick.AddListener(action);
-            }
-        }
+		public static void SetupButtons(params (Button btn, UnityAction onClick)[] pairs)
+		{
+			for (var i = 0; i < pairs.Length; i++)
+			{
+				(Button btn, UnityAction onClick) = pairs[i];
+				if (btn == null || onClick == null) continue;
+				btn.onClick.RemoveListener(onClick);
+				btn.onClick.AddListener(onClick);
+			}
+		}
+		
+		// public static void SetupButtons(params object[] buttonActionList)
+  //       {
+  //           for (var i = 0; i < buttonActionList.Length; i += 2)
+  //           {
+  //               var btn = buttonActionList[i] as Button;
+  //               if (btn == null)
+  //               {
+	 //                Debug.LogWarning($"Btn is null: {btn}");
+	 //                continue;
+  //               }
+  //
+  //               var action = buttonActionList[i + 1] as UnityAction;
+  //               if (action == null)
+  //               {
+	 //                Debug.LogWarning($"Action is null: {action}");
+	 //                continue;
+  //               }
+  //
+  //               btn.onClick.RemoveListener(action);
+  //               btn.onClick.AddListener(action);
+  //           }
+  //       }
 
     }
 }
