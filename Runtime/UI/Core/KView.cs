@@ -269,7 +269,7 @@ namespace vn.corelib
             }
             else
             {
-                Debug.LogWarning($"Added: {kViewId}");   
+                // Debug.LogWarning($"Added: {kViewId}");   
             }
         }
         

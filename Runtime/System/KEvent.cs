@@ -134,12 +134,6 @@ namespace vn.corelib
                     // Debug.LogWarning($"Event {eventName} - No listener with {nParams} parameters found!");
                     return;
                 }
-
-                if (_dispatching)
-                {
-                    KAsync.DelayCall(() => EditorTryDispatch(() => cb(d)));
-                    return;
-                }
                 
                 EditorTryDispatch(() => cb(d));
             }
@@ -167,12 +161,19 @@ namespace vn.corelib
 
             private bool _dispatching;
 
-
+            internal int delayCount;
             internal void EditorTryDispatch(Action cb)
             {
                 if (_dispatching)
                 {
-                    Debug.LogWarning($"[{nameof(KEvent)}] Nested event dispatching is not supported just yet!");
+                    Debug.LogWarning($"[{nameof(KEvent)}] Nested event dispatching --> delaying: {delayCount}");
+                    delayCount++;
+                    KAsync.DelayCall(() =>
+                    {
+                        EditorTryDispatch(cb);
+                        delayCount--;
+                        Debug.Log($"Callback --> {delayCount}");
+                    });
                     return;
                 }
 

@@ -219,13 +219,14 @@ public static class KAsync
         }
         
         // compact queue
-        if (dieCount >= _queue.Count / 2f)
+        if (dieCount > 8 && dieCount >= _queue.Count / 2f) // don't compact too small array it's useless!
         {
-            Debug.LogWarning("Compact!");
             for (var i = _queue.Count - 1; i >= 0; i--)
             {
                 if (_queue[i] == null) _queue.RemoveAt(i);
             }
+            
+            Debug.Log($"Compact --> {_queue.Count}");
         }
         
         for (var i = 0; i < _execQueue.Count; i++)
