@@ -160,6 +160,8 @@ namespace vn.corelib
 		void DelayRefresh()
 		{
 			EditorApplication.update -= DelayRefresh;
+			if (this == null || gameObject == null) return;
+			
 			Preprocess();
 			Refresh();
 		}
