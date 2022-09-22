@@ -178,17 +178,18 @@ public static class KAsync
         time = Time.time;
         realTime = Time.realtimeSinceStartup;
 
-        if (_sleepFrame > 0)
-        {
-            _sleepFrame--;
-            return;
-        }
+        // if (_sleepFrame > 0)
+        // {
+        //     _sleepFrame--;
+        //     return;
+        // }
         
         ProcessQueue();
     }
 
     private static void ProcessQueue()
     {
+        // Debug.LogWarning($"Process queue: {_queue.Count}");
         var dieCount = 0;
         _sleepFrame = 1000;
         _execQueue.Clear();
