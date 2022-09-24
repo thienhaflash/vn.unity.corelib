@@ -88,7 +88,8 @@ namespace vn.corelib
         // --------- GENERATED ----------
         public RectTransform holder;
         public GameObject viewGO;
-        public IKViewTransition viewTrans; // Support transition callbacks
+        public IKViewTransition viewTrans; // Support transition 
+        public Animation anim;
         
         // context API
         public void RefreshViewData(object newViewData)
@@ -144,9 +145,11 @@ namespace vn.corelib
                 kvi?.Init(this);
                 
                 viewTrans = viewGO.GetComponent<IKViewTransition>();
+                anim = viewGO.GetComponent<Animation>();
             }
             
             if (viewTrans != null) TriggerCallback(viewTrans.OnBeforeShow);
+            if (anim != null) anim.Play(PlayMode.StopAll);
             
             isVisible = true;
             viewGO.SetActive(true);
