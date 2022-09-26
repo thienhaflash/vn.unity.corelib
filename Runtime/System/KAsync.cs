@@ -46,6 +46,8 @@ public static class KAsync
         }
         public virtual void Callback()
         {
+            alive = false;
+            
             try
             {
                 callback?.Invoke();
@@ -53,10 +55,6 @@ public static class KAsync
             catch (Exception e)
             {
                 Debug.LogWarning($"Exception: {e}");
-            }
-            finally
-            {
-                alive = false;
             }
         }
     }
@@ -109,7 +107,7 @@ public static class KAsync
     public static float time;
     public static float realTime;
 
-    [NonSerialized] private static int _sleepFrame;
+    // [NonSerialized] private static int _sleepFrame;
     [NonSerialized] private static readonly List<Info> _execQueue = new List<Info>();
     [NonSerialized] internal static readonly List<Info> _queue = new List<Info>();
     [NonSerialized] private static readonly Dictionary<object, Info> _map = new Dictionary<object, Info>();
@@ -119,13 +117,14 @@ public static class KAsync
         if (!_map.TryGetValue(id, out Info info)) return null;
         info.callback = callback;
         info.delay = delayInFrame;
+        info.alive = true;
         return (T)info;
     }
     
     public static void DelayCall(Action callback, int delayInFrame = 0, object customId = null)
     {
         if (callback == null) return;
-        _sleepFrame = Mathf.Min(_sleepFrame, delayInFrame);
+        // _sleepFrame = Mathf.Min(_sleepFrame, delayInFrame);
         
         var id = customId ?? callback;
         if (TryOverwrite<Info>(id, callback, delayInFrame) != null) return;
@@ -138,7 +137,7 @@ public static class KAsync
     public static void SetInterval(Action callback, int delayInFrame, int intervalInFrame, object customId = null)
     {
         if (callback == null) return;
-        _sleepFrame = Mathf.Min(_sleepFrame, delayInFrame);
+        // _sleepFrame = Mathf.Min(_sleepFrame, delayInFrame);
         
         var id = customId ?? callback;
         if (TryOverwrite<Interval>(id, callback, delayInFrame) != null) return;
@@ -152,7 +151,7 @@ public static class KAsync
     {
         if (check == null) return;
         var id = customId ?? check;
-        _sleepFrame = 0;
+        // _sleepFrame = 0;
         
         if (_map.TryGetValue(id, out Info _))
         {
@@ -177,13 +176,6 @@ public static class KAsync
         frame++;
         time = Time.time;
         realTime = Time.realtimeSinceStartup;
-
-        // if (_sleepFrame > 0)
-        // {
-        //     _sleepFrame--;
-        //     return;
-        // }
-        
         ProcessQueue();
     }
 
@@ -191,7 +183,7 @@ public static class KAsync
     {
         // Debug.LogWarning($"Process queue: {_queue.Count}");
         var dieCount = 0;
-        _sleepFrame = 1000;
+        // _sleepFrame = 1000;
         _execQueue.Clear();
         for (var i = 0; i < _queue.Count; i++)
         {
@@ -204,6 +196,7 @@ public static class KAsync
 
             if (q.alive == false)
             {
+                _map.Remove(_queue[i].id);
                 _queue[i] = null;
                 dieCount++;
                 continue;
@@ -212,7 +205,11 @@ public static class KAsync
             if (q.delay > 0)
             {
                 q.delay--;
-                _sleepFrame = Mathf.Min(q.delay, _sleepFrame);
+                // if (q.delay % 10 == 0)
+                // {
+                //     Debug.LogWarning($"{i} --> Wait: {q.delay}");    
+                // }
+                // _sleepFrame = Mathf.Min(q.delay, _sleepFrame);
                 continue;
             }
             
@@ -228,21 +225,13 @@ public static class KAsync
                 if (_queue[i] == null) _queue.RemoveAt(i);
             }
             
-            Debug.Log($"After compact {n} --> {_queue.Count}");
+            // Debug.Log($"After compact {n} --> {_queue.Count}");
         }
         
         for (var i = 0; i < _execQueue.Count; i++)
         {
             Info info = _execQueue[i];
             info.Callback();
-            
-            if (info.alive) 
-            {
-                _sleepFrame = Mathf.Min(info.delay, _sleepFrame);
-                continue;
-            }
-            
-            _map.Remove(info.id);
         }
     }
 }
