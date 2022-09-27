@@ -22,8 +22,8 @@ namespace vn.corelib
 
     [Serializable] public class KFileCatalogT<TEntry> where TEntry: KCatalogEntry
     {
-        [SerializeField] private List<TEntry> _entries = new List<TEntry>();
-        [NonSerialized] private bool _loaded = false;
+        [SerializeField] internal List<TEntry> _entries = new List<TEntry>();
+        [NonSerialized] internal bool _loaded = false;
         [NonSerialized] private readonly string _catalogFileName;
         [NonSerialized] private readonly Dictionary<string, TEntry> _map = new Dictionary<string, TEntry>();
 
