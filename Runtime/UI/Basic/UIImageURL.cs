@@ -25,10 +25,13 @@ namespace vn.corelib
             }
 
             var currentURL = url;
-            KImageLoader.Load(currentURL, (sprt) =>
+            KImageLoader.Load(currentURL, (text) =>
             {
                 if (url != currentURL) return; // change to a different URL
-                target.sprite = defaultImage;
+                if (text == null) return;
+                
+                var spr = Sprite.Create(text, new Rect(0.0f, 0.0f, text.width, text.height), new Vector2(0.5f, 0.5f), 100.0f);
+                target.sprite = spr;
             });
         }
 
