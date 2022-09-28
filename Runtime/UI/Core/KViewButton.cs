@@ -35,12 +35,14 @@ namespace vn.corelib
 
         void OnClick()
         {
+            KUtils.PlaySFX("click");
+            
             if (view != null)
             {
                 view.ShowView(viewId, null, layerId);
                 return;
             }
-
+            
             KView.Goto(viewId, null, layerId);
         }
 

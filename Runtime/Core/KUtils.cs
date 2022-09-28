@@ -117,7 +117,12 @@ namespace vn.corelib
 				btn.onClick.AddListener(onClick);
 			}
 		}
-		
+
+		public static void PlaySFX(string id)
+		{
+			KApi.Execute("PlaySFX", "id", id);
+		}
+
 		// public static void SetupButtons(params object[] buttonActionList)
   //       {
   //           for (var i = 0; i < buttonActionList.Length; i += 2)
