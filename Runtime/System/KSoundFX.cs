@@ -33,12 +33,15 @@ public class KSoundFX : MonoBehaviour
         for (var i = 0; i < maxSFX; i++)
         {
             var go = new GameObject($"SFX_{i + 1}");
+            DontDestroyOnLoad(go);
+            
             go.transform.SetParent(transform);
             var src = go.AddComponent<AudioSource>();
             _audioPool.Add(src);
         }
 
         Add(clips);
+        DontDestroyOnLoad(this);
     }
     
     private object AddSFXApi(Dictionary<string, object> data)
