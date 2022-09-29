@@ -11,13 +11,13 @@ public static class KAsync
     }
     
 #if UNITY_EDITOR
-    [Serializable] public partial class Info
+    [Serializable] internal partial class Info
     {
         public string description;
     }
 #endif
     
-    public partial class Info
+    internal partial class Info
     {
         private static int _counter;
         
@@ -58,7 +58,7 @@ public static class KAsync
             }
         }
     }
-    public class Interval : Info
+    internal class Interval : Info
     {
         public readonly int interval;
         public Interval(Action callback, int delay, int interval, object id) : base(callback, delay, id)
@@ -73,7 +73,7 @@ public static class KAsync
             alive = true;
         }
     }
-    public class Wait : Info
+    internal class Wait : Info
     {
         public readonly Func<bool> checkFunc;
         public readonly int interval;
@@ -98,7 +98,7 @@ public static class KAsync
                 base.Callback();
                 return;
             }
-
+            
             delay = interval;
         }
     }
@@ -109,7 +109,7 @@ public static class KAsync
 
     // [NonSerialized] private static int _sleepFrame;
     [NonSerialized] private static readonly List<Info> _execQueue = new List<Info>();
-    [NonSerialized] internal static readonly List<Info> _queue = new List<Info>();
+    [NonSerialized] private static readonly List<Info> _queue = new List<Info>();
     [NonSerialized] private static readonly Dictionary<object, Info> _map = new Dictionary<object, Info>();
 
     private static T TryOverwrite<T>(object id, Action callback, int delayInFrame) where T: Info
@@ -147,7 +147,7 @@ public static class KAsync
         _map.Add(id, info);
     }
     
-    public static void WaitUntil(Func<bool> check, Action onComplete, int checkInterval, object customId = null)
+    public static void WaitUntil(Func<bool> check, Action onComplete, int checkInterval = 1, object customId = null)
     {
         if (check == null) return;
         var id = customId ?? check;
@@ -169,6 +169,11 @@ public static class KAsync
         if (!_map.TryGetValue(id, out Info info)) return;
         _map.Remove(id);
         info.alive = false;
+    }
+    
+    public static void Kill(Action cb)
+    {
+        Kill((object)cb);
     }
     
     public static void UpdateFrame()
