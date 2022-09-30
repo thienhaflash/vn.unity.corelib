@@ -36,7 +36,7 @@ public class KMusicPlayer : MonoBehaviour
     {
         if (_clip == clip)
         {
-            Debug.LogWarning("Same -->");
+            // Debug.LogWarning("Same -->");
             return;
         }
 

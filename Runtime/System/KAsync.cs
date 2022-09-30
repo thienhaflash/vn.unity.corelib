@@ -115,20 +115,24 @@ public static class KAsync
     private static T TryOverwrite<T>(object id, Action callback, int delayInFrame) where T: Info
     {
         if (!_map.TryGetValue(id, out Info info)) return null;
+        
+        Debug.LogWarning($"Overwrite: {id}");
+        
         info.callback = callback;
         info.delay = delayInFrame;
         info.alive = true;
         return (T)info;
     }
     
-    public static void DelayCall(Action callback, int delayInFrame = 0, object customId = null)
+    public static void DelayCall(Action callback, int delayInFrame = 0, object customId = null, bool tryOverwrite = true)
     {
         if (callback == null) return;
         // _sleepFrame = Mathf.Min(_sleepFrame, delayInFrame);
         
         var id = customId ?? callback;
-        if (TryOverwrite<Info>(id, callback, delayInFrame) != null) return;
-
+        var canOverwrite = customId != null || tryOverwrite == true;
+        if (canOverwrite && TryOverwrite<Info>(id, callback, delayInFrame) != null) return;
+        
         var info = new Info(callback, delayInFrame, id);
         _queue.Add(info);
         _map.Add(id, info);

@@ -5,6 +5,9 @@ using UnityEngine;
 public class KSoundFX : MonoBehaviour
 {
     private static KSoundFX _api;
+    public static KSoundFX Api => _api;
+
+
     [Range(1, 10)] public int maxSFX = 5;
     public List<AudioClip> clips = new List<AudioClip>();
     
@@ -97,6 +100,9 @@ public class KSoundFX : MonoBehaviour
         
         _playingIdx = (_playingIdx + 1) % maxSFX;
         AudioSource src = _audioPool[_playingIdx];
+        
+        // Debug.LogWarning($"Play {clipName} at {_playingIdx}");
+        
         src.clip = clip;
         src.Play();
     }
