@@ -11,9 +11,11 @@ namespace vn.corelib
 {
     public class KViewButton : MonoBehaviour
     {
+        public string kViewId = "";
         public string viewId;
         public string layerId = "MAIN";
-        public KView view;
+        
+        private KView _kView;
         
         #if UNITY_EDITOR
         private void Reset()
@@ -37,9 +39,10 @@ namespace vn.corelib
         {
             KUtils.PlaySFX("click");
             
-            if (view != null)
+            if (!string.IsNullOrEmpty(kViewId))
             {
-                view.ShowView(viewId, null, layerId);
+                _kView = KView.GetKViewById(kViewId);
+                _kView.ShowView(viewId, null, layerId);
                 return;
             }
             
@@ -51,8 +54,8 @@ namespace vn.corelib
             var kView = transform.GetComponentInParent<KView>();
             if (kView == null) return;
             if (kView.useAsDefault) return;
-            view = kView;
-
+            kViewId = kView.kViewId;
+            
 #if UNITY_EDITOR
             UnityEditor.EditorUtility.SetDirty(this);
 #endif
