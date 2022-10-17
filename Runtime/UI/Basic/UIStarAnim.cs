@@ -50,7 +50,7 @@ public class UIStarAnim : MonoBehaviour
             var delay2 = delay + (int) (soundDelay * 60);
             KAsync.DelayCall(() =>
             {
-                KSoundFX.Api.Play(soundFX);
+                KSoundFX.Play(soundFX);
             }, delay2, activeStars[i]);
         }
     }

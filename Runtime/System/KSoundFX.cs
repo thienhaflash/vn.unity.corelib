@@ -5,9 +5,11 @@ using UnityEngine;
 public class KSoundFX : MonoBehaviour
 {
     private static KSoundFX _api;
-    public static KSoundFX Api => _api;
-
-
+    public static void Play(string clipName)
+    {
+        _api.InternalPlay(clipName);
+    }
+    
     [Range(1, 10)] public int maxSFX = 5;
     public List<AudioClip> clips = new List<AudioClip>();
     
@@ -19,8 +21,7 @@ public class KSoundFX : MonoBehaviour
     {
         if (_api != null && _api != this)
         {
-            Add(clips);
-            Destroy(this);
+            InternalAdd(clips);
             return;
         }
 
@@ -43,7 +44,7 @@ public class KSoundFX : MonoBehaviour
             _audioPool.Add(src);
         }
 
-        Add(clips);
+        InternalAdd(clips);
         DontDestroyOnLoad(this);
     }
     
@@ -51,26 +52,24 @@ public class KSoundFX : MonoBehaviour
     {
         if (data.ContainsKey("clip"))
         {
-            Add(data["clip"] as AudioClip);
+            InternalAdd(data["clip"] as AudioClip);
             return null;
         }
         
         if (data.ContainsKey("clips"))
         {
-            Add(data["clips"] as List<AudioClip>);
+            InternalAdd(data["clips"] as List<AudioClip>);
             return null;
         }
         
         return null;
     }
-    
     private object PlaySFXApi(Dictionary<string, object> data)
     {
-        Play(data["id"] as string);
+        InternalPlay(data["id"] as string);
         return null;
     }
-    
-    public void Add(AudioClip clip, string clipName = null)
+    private void InternalAdd(AudioClip clip, string clipName = null)
     {
         if (string.IsNullOrEmpty(clipName)) clipName = clip.name;
         if (_clipMap.TryGetValue(clipName, out var result))
@@ -81,16 +80,35 @@ public class KSoundFX : MonoBehaviour
         
         _clipMap.Add(clipName, clip);
     }
-    
-    public void Add(List<AudioClip> listClips)
+    private void InternalRemove(AudioClip clip)
+    {
+        var deleteKeys = new HashSet<string>();
+        foreach (var kvp in _clipMap)
+        {
+            if (kvp.Value == clip) deleteKeys.Add(kvp.Key);
+        }
+        
+        // delete all collected keys
+        foreach (var key in deleteKeys)
+        {
+            _clipMap.Remove(key);
+        }
+    }
+    private void InternalAdd(List<AudioClip> listClips)
     {
         for (var i = 0; i < listClips.Count; i++)
         {
-            Add(listClips[i]);
+            InternalAdd(listClips[i]);
         }
     }
-    
-    public void Play(string clipName)
+    private void InternalRemove(List<AudioClip> listClips)
+    {
+        for (var i = 0; i < listClips.Count; i++)
+        {
+            InternalRemove(listClips[i]);
+        }
+    }
+    private void InternalPlay(string clipName)
     {
         if (!_clipMap.TryGetValue(clipName, out AudioClip clip))
         {
@@ -106,6 +124,8 @@ public class KSoundFX : MonoBehaviour
         src.clip = clip;
         src.Play();
     }
-    
-    
+    private void OnDestroy()
+    {
+        InternalRemove(clips);
+    }
 }
